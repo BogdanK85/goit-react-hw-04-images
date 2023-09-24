@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(12);
+  // const [perPage, setPerPage] = useState(12);
   const [images, setImages] = useState([]);
   const [webformatURL, setWebformatURL] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,28 +25,29 @@ export const App = () => {
     if (page === 1) {
       setImages([]);
     }
+    const fetchPictures = async () => {
+      try {
+        setIsLoading(true);
+
+        const newPictures = await fetchNewPictures(searchQuery, page);
+
+        if (newPictures.hits.length > 0 && page === 1) {
+          toast.success('Your picture found!');
+        } else if (newPictures.hits.length === 0) {
+          throw new Error();
+        }
+        setImages(prevImages => [...prevImages, ...newPictures.hits]);
+        setIsShowLoadMoreBtn(page < Math.ceil(newPictures.totalHits / 12));
+      } catch (error) {
+        toast.error(
+          'Does not have pictures at your request. Please try agein..'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchPictures();
   }, [searchQuery, page]);
-
-  const fetchPictures = async () => {
-    try {
-      setIsLoading(true);
-
-      const newPictures = await fetchNewPictures(searchQuery, page, perPage);
-
-      if (newPictures.hits.length > 0 && page === 1) {
-        toast.success('Your picture found!');
-      } else if (newPictures.hits.length === 0) {
-        throw new Error();
-      }
-      setImages(prevImages => [...prevImages, ...newPictures.hits]);
-      setIsShowLoadMoreBtn(page < Math.ceil(newPictures.totalHits / perPage));
-    } catch (error) {
-      toast.error('Does not have pictures at your request. Please try agein..');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const onFormSubmit = searchQuery => {
     // if (searchQuery === searchQuery) {

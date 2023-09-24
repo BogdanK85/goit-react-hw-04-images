@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchNewPictures } from 'API/API';
 import { SectionApp } from 'components/SectionApp/SectionApp';
 import { Searchbar } from 'components/Searchbar/Searchbar';
@@ -8,108 +8,91 @@ import { Spiner } from 'components/Loader/Loader';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export class App extends Component {
-  state = {
-    searchQuery: '',
-    page: 1,
-    perPage: 12,
+export const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(12);
+  const [images, setImages] = useState([]);
+  const [webformatURL, setWebformatURL] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isShowLoadMoreBtn, setIsShowLoadMoreBtn] = useState(false);
+  const [isShowModal, setIsShowModal] = useState(false);
 
-    images: [],
-    webformatURL: [],
-    isLoading: false,
-    isShowLoadMoreBtn: false,
-  };
-
-  componentDidUpdate(_, prevState) {
-    const { page, searchQuery } = this.state;
-
-    if (prevState.page !== page || prevState.searchQuery !== searchQuery) {
-      this.fetchPictures(searchQuery, page);
+  useEffect(() => {
+    if (!searchQuery) {
+      return;
     }
-  }
+    if (page === 1) {
+      setImages([]);
+    }
+    fetchPictures();
+  }, [searchQuery, page]);
 
-  fetchPictures = async () => {
-    const { searchQuery, page } = this.state;
-
+  const fetchPictures = async () => {
     try {
-      this.setState({ isLoading: true });
+      setIsLoading(true);
 
-      const newPictures = await fetchNewPictures(
-        searchQuery,
-        page,
-        this.perPage
-      );
+      const newPictures = await fetchNewPictures(searchQuery, page, perPage);
 
       if (newPictures.hits.length > 0 && page === 1) {
         toast.success('Your picture found!');
       } else if (newPictures.hits.length === 0) {
         throw new Error();
       }
-      this.setState(prevState => ({
-        images: [...prevState.images, ...newPictures.hits],
-        isShowLoadMoreBtn:
-          this.state.page < Math.ceil(newPictures.totalHits / 12),
-      }));
+      setImages(prevImages => [...prevImages, ...newPictures.hits]);
+      setIsShowLoadMoreBtn(page < Math.ceil(newPictures.totalHits / perPage));
     } catch (error) {
       toast.error('Does not have pictures at your request. Please try agein..');
-      this.setState({ error: error.message });
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  onFormSubmit = searchQuery => {
-    if (this.state.searchQuery === searchQuery) {
-      return toast.warn(`You are viewing ${searchQuery}`);
-    }
-    this.setState({
-      searchQuery: searchQuery,
-      page: 1,
-      images: [],
-    });
+  const onFormSubmit = searchQuery => {
+    // if (searchQuery === searchQuery) {
+    //   return toast.warn(`You are viewing ${searchQuery}`);
+    // }
+    setSearchQuery(searchQuery);
+    setPage(1);
+    setImages([]);
   };
 
-  onLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const onLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  onPictureClick = largeImageURL => {
-    this.setState({ isLoading: true, largeImageURL, isShowModal: true });
+  const onPictureClick = largeImageURL => {
+    setIsLoading(true);
+    setWebformatURL({ largeImageURL });
+    setIsShowModal(true);
   };
 
-  render() {
-    const { images, isLoading } = this.state;
+  return (
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      <SectionApp>
+        <Searchbar onSubmit={onFormSubmit} />
+        {images.length > 0 && (
+          <ImageGallery newPictures={images} onPictureClick={onPictureClick} />
+        )}
 
-    return (
-      <>
-        <ToastContainer
-          position="top-right"
-          autoClose={2000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-        <SectionApp>
-          <Searchbar onSubmit={this.onFormSubmit} />
-          {images.length > 0 && (
-            <ImageGallery
-              newPictures={images}
-              onPictureClick={this.onPictureClick}
-            />
-          )}
+        {isShowLoadMoreBtn && (
+          <LoadMoreBtn onClick={onLoadMore} isVisible={!isLoading} />
+        )}
 
-          {this.state.isShowLoadMoreBtn && (
-            <LoadMoreBtn onClick={this.onLoadMore} isVisible={!isLoading} />
-          )}
-
-          {isLoading && <Spiner loading={isLoading} size={125} />}
-        </SectionApp>
-      </>
-    );
-  }
-}
+        {isLoading && <Spiner loading={isLoading} size={125} />}
+      </SectionApp>
+    </>
+  );
+};

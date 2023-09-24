@@ -7,17 +7,18 @@ import { LoadMoreBtn } from 'components/Button/Button';
 import { Spiner } from 'components/Loader/Loader';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Modal from 'components/Modal/Modal';
 
 export const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   // const [perPage, setPerPage] = useState(12);
   const [images, setImages] = useState([]);
-  const [webformatURL, setWebformatURL] = useState([]);
+  // const [webformatURL, setWebformatURL] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isShowLoadMoreBtn, setIsShowLoadMoreBtn] = useState(false);
   const [isShowModal, setIsShowModal] = useState(false);
-
+  const [largeImageURL, setLargeImageURL] = useState('');
   useEffect(() => {
     if (!searchQuery) {
       return;
@@ -64,8 +65,15 @@ export const App = () => {
 
   const onPictureClick = largeImageURL => {
     setIsLoading(true);
-    setWebformatURL({ largeImageURL });
+    setLargeImageURL(largeImageURL);
     setIsShowModal(true);
+    toggleModal();
+  };
+  const onCloseModal = () => {
+    setIsShowModal(false);
+  };
+  const toggleModal = () => {
+    setIsShowModal(prevShowModal => !prevShowModal);
   };
 
   return (
@@ -93,6 +101,9 @@ export const App = () => {
         )}
 
         {isLoading && <Spiner loading={isLoading} size={125} />}
+        {isShowModal && (
+          <Modal largeImageURL={largeImageURL} onClose={onCloseModal} />
+        )}
       </SectionApp>
     </>
   );

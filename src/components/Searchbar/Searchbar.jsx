@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import {
   FormStyle,
   HeaderStyle,
@@ -9,61 +9,57 @@ import {
 import 'react-toastify/dist/ReactToastify.css';
 import { toast, ToastContainer } from 'react-toastify';
 
-export class Searchbar extends Component {
-  state = {
-    searchQuery: '',
+export const Searchbar = ({ onSubmit }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const onFormChange = evt => {
+    setSearchQuery(evt.currentTarget.value);
   };
 
-  onFormChange = evt => {
-    this.setState({ searchQuery: evt.currentTarget.value });
-  };
-
-  onFormSubmit = evt => {
+  const onFormSubmit = evt => {
     evt.preventDefault();
-    if (this.state.searchQuery.trim() === '') {
+    if (searchQuery.trim() === '') {
       toast.info('field must be filled in');
       return;
     }
-    this.props.onSubmit(this.state.searchQuery.toLowerCase().trim());
-    this.formReset();
+    onSubmit(searchQuery.toLowerCase().trim());
+    formReset();
   };
 
-  formReset = () => {
-    this.setState({ searchQuery: '' });
+  const formReset = () => {
+    setSearchQuery('');
   };
 
-  render() {
-    return (
-      <>
-        <ToastContainer
-          position="top-right"
-          autoClose={2000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-        <HeaderStyle>
-          <FormStyle onSubmit={this.onFormSubmit}>
-            <SearchFormButton type="submit">
-              <SearchFormButtonLabel>Search</SearchFormButtonLabel>
-            </SearchFormButton>
+  return (
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      <HeaderStyle>
+        <FormStyle onSubmit={onFormSubmit}>
+          <SearchFormButton type="submit">
+            <SearchFormButtonLabel>Search</SearchFormButtonLabel>
+          </SearchFormButton>
 
-            <SearchFormInput
-              type="text"
-              autoComplete="off"
-              autoFocus
-              placeholder="Search images and pictures"
-              onChange={this.onFormChange}
-              value={this.state.searchQuery}
-            />
-          </FormStyle>
-        </HeaderStyle>
-      </>
-    );
-  }
-}
+          <SearchFormInput
+            type="text"
+            autoComplete="off"
+            autoFocus
+            placeholder="Search images and pictures"
+            onChange={onFormChange}
+            value={searchQuery}
+          />
+        </FormStyle>
+      </HeaderStyle>
+    </>
+  );
+};

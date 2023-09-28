@@ -50,11 +50,11 @@ export const App = () => {
     fetchPictures();
   }, [searchQuery, page]);
 
-  const onFormSubmit = searchQuery => {
-    // if (searchQuery === searchQuery) {
-    //   return toast.warn(`You are viewing ${searchQuery}`);
-    // }
-    setSearchQuery(searchQuery);
+  const onFormSubmit = query => {
+    if (searchQuery === query) {
+      return toast.warn(`You are viewing ${searchQuery}`);
+    }
+    setSearchQuery(query);
     setPage(1);
     setImages([]);
   };
